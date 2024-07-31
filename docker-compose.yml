@@ -1,0 +1,100 @@
+version: '3'
+
+services:
+    php:
+        image: "${APP_IMAGE_NAME:-$APP_NAME}_${APP_ENV}_php"
+        build:
+            context: .
+            dockerfile: Dockerfile
+            args:
+                - "APP_DEBUG=${APP_DEBUG}"
+                - "APP_ENV=${APP_ENV}"
+        container_name: "${APP_NAME}_${APP_ENV}_php"
+        restart: always
+        environment:
+            - "XDG_CONFIG_HOME=/var/www"
+            - "XDEBUG_CONFIG=client_host=host.docker.internal"
+        volumes:
+            - "./:/var/www"
+        ports:
+            - ${APP_PORT}:80
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        depends_on:
+            - db
+#            - redis
+        networks:
+            web_net:
+
+#    php_admin:
+#        image: "${APP_IMAGE_NAME:-$APP_NAME}_${APP_ENV}_php_admin"
+#        build:
+#            context: ../yumic-admin-backend
+#            dockerfile: Dockerfile
+#            args:
+#                - "APP_DEBUG=${APP_DEBUG}"
+#                - "APP_ENV=${APP_ENV}"
+#        container_name: "${APP_NAME}_${APP_ENV}_php_admin"
+#        restart: always
+#        environment:
+#            - "XDG_CONFIG_HOME=../yumic-admin-backend"
+#            - "XDEBUG_CONFIG=client_host=host.docker.internal"
+#        volumes:
+#            - "../yumic-admin-backend/:/var/www"
+#        ports:
+#            - ${APP_PORT_ADMIN}:80
+#        extra_hosts:
+#            - "host.docker.internal:host-gateway"
+#        depends_on:
+#            - db
+#            - redis
+#        networks:
+#            web_net:
+    #    admin_frontend:
+    #        image: "${APP_NAME}_${APP_ENV}_admin_frontend"
+    #        build:
+    #            context: ../yumic-admin-frontend/
+    #            dockerfile: Dockerfile
+    #        container_name: "${APP_NAME}_${APP_ENV}_admin_frontend"
+    #        restart: always
+    #        ports:
+    #            - "3000:3000"
+    #        networks:
+    #            web_net:
+    db:
+        image: mysql:8.0.30
+        container_name: "${APP_NAME}_${APP_ENV}_db"
+        restart: always
+        environment:
+            - "MYSQL_DATABASE=${DB_DATABASE}"
+            - "MYSQL_USER=${DB_USERNAME}"
+            - "MYSQL_PASSWORD=${DB_PASSWORD}"
+            - "MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}"
+        ports:
+            - "${DB_EXPOSE_PORT:-$DB_PORT}:${DB_PORT}"
+        volumes:
+            - ".docker/mysql/data:/var/lib/mysql"
+            - ".docker/mysql/my.cnf:/etc/mysql/my.cnf"
+        networks:
+            web_net:
+
+#    redis:
+#        image: redis:7.0.7
+#        container_name: "${APP_NAME}_${APP_ENV}_redis"
+#        restart: always
+#        environment:
+#            - "REDIS_PASSWORD=${REDIS_PASSWORD}"
+#        command:
+#            - /bin/sh
+#            - -c
+#            - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
+#        ports:
+#            - "${REDIS_EXPOSE_PORT:-$REDIS_PORT}:${REDIS_PORT}"
+#        volumes:
+#            - ".docker/redis/data:/data"
+#        networks:
+#            web_net:
+
+
+networks:
+    web_net:
